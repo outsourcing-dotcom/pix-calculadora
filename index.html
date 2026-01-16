@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Guaraníes → Pix</title>
+
+<style>
+body {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  background: radial-gradient(circle at top, #140000, #000000);
+  color: #f1f1f1;
+  padding: 20px;
+}
+
+/* Card */
+.box {
+  position: relative;
+  background: #0e0e0e;
+  max-width: 420px;
+  margin: auto;
+  padding: 28px 25px 25px;
+  border-radius: 16px;
+  border: 1px solid #1f1f1f;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+  animation: slideIn 0.6s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Cambio badge */
+.cambio-badge {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: linear-gradient(135deg, #2a0000, #120000);
+  color: #ff4d4d;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: bold;
+  border: 1px solid #330000;
+}
+
+/* Title */
+h2 {
+  text-align: center;
+  margin-bottom: 26px;
+  color: #ff4d4d;
+}
+
+/* Inputs */
+label {
+  font-size: 14px;
+  margin-top: 14px;
+  display: block;
+  color: #cccccc;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  margin-top: 6px;
+  border-radius: 12px;
+  border: none;
+  background: #050505;
+  color: #f1f1f1;
+  outline: 1px solid #2a2a2a;
+  font-size: 15px;
+}
+
+input:focus {
+  outline: 2px solid #ff4d4d;
+}
+
+/* Button */
+button {
+  width: 100%;
+  margin-top: 22px;
+  padding: 14px;
+  background: linear-gradient(135deg, #ff4d4d, #b30000);
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #0b0b0b;
+  transition: transform 0.15s ease;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* Loader */
+.loader {
+  display: none;
+  margin: 25px auto;
+  width: 38px;
+  height: 38px;
+  border: 4px solid #2a2a2a;
+  border-top: 4px solid #ff4d4d;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Result transitions */
+.resultado, .total {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.4s ease;
+}
+
+.mostrar {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.resultado {
+  margin-top: 22px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.total {
+  margin-top: 16px;
+  padding: 14px;
+  background: #050505;
+  border-radius: 14px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: #ff4d4d;
+  outline: 1px solid #2a2a2a;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 14px;
+  font-size: 12px;
+  color: #777777;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <div class="cambio-badge" id="cambioBadge"></div>
+
+  <h2>Guaraníes → Pix</h2>
+
+  <label>Guaraníes (PYG)</label>
+  <input type="number" id="guaranies" placeholder="Ej: 2000000">
+
+  <button onclick="convertir()">Calcular</button>
+
+  <!-- Loader -->
+  <div class="loader" id="loader"></div>
+
+  <div class="resultado" id="detalle"></div>
+  <div class="total" id="total"></div>
+
+  <div class="footer">
+    Comisión automática · Entrega incluida
+  </div>
+</div>
+
+<script>
+/* Configuración */
+const TIPO_CAMBIO = 1280;
+const ENTREGA = 10;
+
+document.getElementById("cambioBadge").innerText =
+  `Cambio: ${TIPO_CAMBIO} PYG`;
+
+function obtenerComision(brlBase) {
+  if (brlBase <= 600) return 15;
+  if (brlBase <= 800) return 20;
+  if (brlBase <= 1200) return 25;
+  return 30;
+}
+
+function convertir() {
+  const guaranies = parseFloat(document.getElementById("guaranies").value);
+  const loader = document.getElementById("loader");
+  const detalle = document.getElementById("detalle");
+  const total = document.getElementById("total");
+
+  detalle.classList.remove("mostrar");
+  total.classList.remove("mostrar");
+  loader.style.display = "block";
+
+  if (isNaN(guaranies) || guaranies <= 0) {
+    loader.style.display = "none";
+    detalle.innerText = "⚠️ Ingresá un monto válido";
+    detalle.classList.add("mostrar");
+    return;
+  }
+
+  // ⏳ Simula procesamiento (UX pro)
+  setTimeout(() => {
+    const brlBase = guaranies / TIPO_CAMBIO;
+    const comision = obtenerComision(brlBase);
+    const brlTotal = brlBase + comision + ENTREGA;
+
+    loader.style.display = "none";
+
+    detalle.innerHTML = `
+      BRL base: R$ ${brlBase.toFixed(2)}<br>
+      Comisión aplicada: R$ ${comision.toFixed(2)}<br>
+      Entrega (CDE): R$ ${ENTREGA.toFixed(2)}
+    `;
+
+    total.innerText =
+      `Costo total para vos: R$ ${brlTotal.toFixed(2)}`;
+
+    detalle.classList.add("mostrar");
+    total.classList.add("mostrar");
+  }, 700); // tiempo del loader (ms)
+}
+</script>
+
+</body>
+</html>
+
